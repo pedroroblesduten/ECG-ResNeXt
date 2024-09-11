@@ -114,13 +114,26 @@ class ECG_ResNeXt(nn.Module):
             nn.Linear(256, n_classes),
         )
 
+        # Call the weight initialization method after building the layers
+        self._initialize_weights()
+
     def forward(self, x):
         x = self.input_layer(x)
-
         x = self.residual_blocks(x)
-
         x = self.flatten(x)
-
         logits = self.linear(x)
-
         return logits
+
+    def _initialize_weights(self):
+        """Initializes the weights of the model"""
+        for m in self.modules():
+            if isinstance(m, nn.Conv1d):
+                nn.init.kaiming_normal_(m.weight, mode='fan_out', nonlinearity='relu')
+                if m.bias is not None:
+                    nn.init.constant_(m.bias, 0)
+            elif isinstance(m, nn.Linear):
+                nn.init.kaiming_normal_(m.weight, mode='fan_out', nonlinearity='relu')
+                nn.init.constant_(m.bias, 0)
+            elif isinstance(m, nn.LayerNorm):
+                nn.init.constant_(m.weight, 1)
+                nn.init.constant_(m.bias, 0)
